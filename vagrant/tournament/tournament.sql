@@ -7,15 +7,15 @@
 -- these lines here.
 
 DROP DATABASE IF EXISTS tournament;
-DROP TABLE IF EXISTS matches, players;
 
 CREATE DATABASE tournament;
 
 \c tournament;
 
+DROP TABLE IF EXISTS matches, players;
+
 CREATE TABLE matches
 (
-matchID serial,
 winner int,
 loser int
 );
@@ -25,5 +25,5 @@ CREATE TABLE players
 playerID serial,
 name text,
 wins int,
-losses int
+matches int
 );
