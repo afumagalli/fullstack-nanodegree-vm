@@ -5,6 +5,14 @@
 
 import psycopg2
 
+name = 0
+wins = 1
+matches = 2
+id = 3
+
+winner = 0
+loser = 1
+
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
@@ -50,9 +58,10 @@ def registerPlayer(name):
     """
     conn = connect()
     c = conn.cursor()
-    c.execute("INSERT INTO players(name, wins, matches) VALUES(%s, 0, 0)", (name,))
+    c.execute("INSERT INTO players VALUES(%s)", (name,))
     conn.commit()
     conn.close()
+
 
 def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
@@ -72,8 +81,12 @@ def playerStandings():
     c.execute("SELECT * FROM players")
     players = c.fetchall()
     conn.close()
-    players.sort(key = lambda tup: tup[2], reverse = True)
-    return players
+    players.sort(key = lambda tup: tup[wins], reverse = True)
+    standings = []
+    for player in players:
+        player = (player[id], player[name], player[wins], player[matches])
+        standings.append(player)
+    return standings
 
 
 def reportMatch(winner, loser):
@@ -109,13 +122,13 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
+    id = 0
+    name = 1
     players = playerStandings()
     pairings = []
     for player1, player2 in zip(*[iter(players)]*2):
-        match = (player1[0], player1[1], player2[0], player2[1])
+        match = (player1[id], player1[name], player2[id], player2[name])
         pairings.append(match)
     return pairings
 
 print swissPairings()
-
-

@@ -22,8 +22,8 @@ loser int
 
 CREATE TABLE players
 (
-playerID serial,
 name text,
-wins int,
-matches int
+wins int DEFAULT 0,
+matches int DEFAULT 0,
+playerID serial
 );
