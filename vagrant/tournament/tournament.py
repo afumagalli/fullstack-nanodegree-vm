@@ -5,11 +5,13 @@
 
 import psycopg2
 
+# indices for players table
 name = 0
 wins = 1
 matches = 2
 id = 3
 
+# indices for matches table
 winner = 0
 loser = 1
 
@@ -122,8 +124,10 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
+    # overwrite indices to match output from playerStandings()
     id = 0
     name = 1
+
     players = playerStandings()
     pairings = []
     for player1, player2 in zip(*[iter(players)]*2):
@@ -131,4 +135,3 @@ def swissPairings():
         pairings.append(match)
     return pairings
 
-print swissPairings()
