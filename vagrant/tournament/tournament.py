@@ -4,6 +4,7 @@
 #
 
 import psycopg2
+import bleach
 
 # indices for players table
 name = 0
@@ -59,8 +60,11 @@ def registerPlayer(name):
     Args:
       name: the player's full name (need not be unique).
     """
+    # sanitize input
+    name = bleach.clean(name)
     conn = connect()
     c = conn.cursor()
+    # only need name, other values set to default
     c.execute("INSERT INTO players VALUES(%s)", (name,))
     conn.commit()
     conn.close()
@@ -81,15 +85,10 @@ def playerStandings():
     """
     conn = connect()
     c = conn.cursor()
-    c.execute("SELECT * FROM players_by_wins")
+    c.execute("SELECT playerID, name, wins, matches FROM players_by_wins")
     players = c.fetchall()
     conn.close()
-    standings = []
-    # for loop used to make desired formatting
-    for player in players:
-        player = (player[id], player[name], player[wins], player[matches])
-        standings.append(player)
-    return standings
+    return players
 
 
 def reportMatch(winner, loser):
@@ -99,8 +98,12 @@ def reportMatch(winner, loser):
       winner:  the id number of the player who won
       loser:  the id number of the player who lost
     """
+    # sanitize input
+    winner = bleach.clean(winner)
+    loser = bleach.clean(loser)
     conn = connect()
     c = conn.cursor()
+    # add match to table
     c.execute("INSERT INTO matches VALUES (%s, %s)", (winner, loser))
     # winner gains a victory and adds to match total
     c.execute("""UPDATE players SET wins = wins + 1, matches = matches + 1
