@@ -9,7 +9,8 @@ import psycopg2
 name = 0
 wins = 1
 matches = 2
-id = 3
+bye = 3
+id = 4
 
 # indices for matches table
 winner = 0
@@ -68,8 +69,8 @@ def registerPlayer(name):
 def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
 
-    The first entry in the list should be the player in first place, or a player
-    tied for first place if there is currently a tie.
+    The first entry in the list should be the player in first place, or a
+    player tied for first place if there is currently a tie.
 
     Returns:
       A list of tuples, each of which contains (id, name, wins, matches):
@@ -80,11 +81,11 @@ def playerStandings():
     """
     conn = connect()
     c = conn.cursor()
-    c.execute("SELECT * FROM players")
+    c.execute("SELECT * FROM players_by_wins")
     players = c.fetchall()
     conn.close()
-    players.sort(key = lambda tup: tup[wins], reverse = True)
     standings = []
+    # for loop used to make desired formatting
     for player in players:
         player = (player[id], player[name], player[wins], player[matches])
         standings.append(player)
@@ -101,8 +102,10 @@ def reportMatch(winner, loser):
     conn = connect()
     c = conn.cursor()
     c.execute("INSERT INTO matches VALUES (%s, %s)", (winner, loser))
+    # winner gains a victory and adds to match total
     c.execute("""UPDATE players SET wins = wins + 1, matches = matches + 1
         WHERE playerID = %s""", (winner,))
+    # loser only adds to match total
     c.execute("""UPDATE players SET matches = matches + 1
         WHERE playerID = %s""", (loser,))
     conn.commit()
@@ -124,14 +127,49 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
-    # overwrite indices to match output from playerStandings()
-    id = 0
-    name = 1
-
-    players = playerStandings()
+    conn = connect()
+    c = conn.cursor()
+    c.execute("SELECT * FROM players_by_wins")
+    players = c.fetchall()
     pairings = []
+    # if odd number of players, assign a bye round
+    if len(players) % 2 == 1:
+        byeMatch, byePlayer = determineBye()
+        pairings.append(byeMatch)
+        players.remove(byePlayer)
+    # iterate through rest of players
+    # zip(*[iter(list)]*n) is Python idiom that iterates through
+    # every n elements of a list
     for player1, player2 in zip(*[iter(players)]*2):
         match = (player1[id], player1[name], player2[id], player2[name])
         pairings.append(match)
+    conn.close()
     return pairings
 
+
+def determineBye():
+    """Determines, at random, a player who has never had a bye round and returns
+    a formatted bye match for this player.
+    """
+    conn = connect()
+    c = conn.cursor()
+    # randomly select one player who has never had a bye
+    c.execute("""SELECT * FROM players WHERE bye = False
+        ORDER BY RANDOM() LIMIT 1""")
+    byePlayer = c.fetchall()[0]
+    match = (byePlayer[id], byePlayer[name], 'bye')
+    # update selected player's bye boolean
+    c.execute("""UPDATE players SET bye = True
+        WHERE playerID = %s""", (byePlayer[id],))
+    conn.commit()
+    conn.close()
+    return match, byePlayer
+
+
+def resetByes():
+    """Testing function that resets the bye boolean to False for all players"""
+    conn = connect()
+    c = conn.cursor()
+    c.execute("UPDATE players SET bye = False")
+    conn.commit()
+    conn.close()
