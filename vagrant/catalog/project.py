@@ -31,7 +31,7 @@ def menuItemJSON(restaurant_id, menu_id):
 def restaurantMenu(restaurant_id):
     restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
     items = session.query(MenuItem).filter_by(
-        restaurant_id=restaurant.id).all()
+    restaurant_id=restaurant.id).all()
     return render_template('menu.html', restaurant=restaurant, items=items)
 
 
@@ -51,6 +51,7 @@ def newMenuItem(restaurant_id):
 @app.route('/restaurants/<int:restaurant_id>/<int:menu_id>/edit/', methods=['GET', 'POST'])
 def editMenuItem(restaurant_id, menu_id):
     editedItem = session.query(MenuItem).filter_by(id=menu_id).one()
+
     if request.method == 'POST':
         if request.form['name']:
             editedItem.name = request.form['name']
