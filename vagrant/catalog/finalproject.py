@@ -13,7 +13,7 @@ session = DBSession()
 
 
 @app.route('/')
-@app.route('/restaurant')
+@app.route('/restaurants')
 def showRestaurant():
     restaurants = session.query(Restaurant).all()
     return render_template('restaurants.html', restaurants=restaurants)
@@ -72,7 +72,7 @@ def showMenu(restaurant_id):
 def newMenuItem(restaurant_id):
     if request.method == 'POST':
         newItem = MenuItem(name=request.form[
-                           'name'], restaurant_id=restaurant_id)
+                           'name'], course=request.form['course'], description=request.form['description'], price=request.form['price'], restaurant_id=restaurant_id)
         session.add(newItem)
         session.commit()
         flash("New menu item created!")
@@ -106,6 +106,26 @@ def deleteMenuItem(restaurant_id, menu_id):
         return redirect(url_for('showMenu', restaurant_id=restaurant_id))
     else:
         return render_template('deleteMenuItem.html', restaurant_id=restaurant_id, menu_id=menu_id, item=itemToDelete)
+
+
+@app.route('/restaurants/JSON')
+def restaurantsJSON():
+    restaurants = session.query(Restaurant).all()
+    return jsonify(Restaurants=[r.serialize for r in restaurants])
+
+
+@app.route('/restaurant/<int:restaurant_id>/menu/JSON')
+def restaurantMenuJSON(restaurant_id):
+    restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
+    items = session.query(MenuItem).filter_by(
+        restaurant_id=restaurant.id).all()
+    return jsonify(MenuItems=[i.serialize for i in items])
+
+
+@app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/JSON')
+def menuItemJSON(restaurant_id, menu_id):
+    menuItem = session.query(MenuItem).filter_by(id=menu_id).one()
+    return jsonify(MenuItem=menuItem.serialize)
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
