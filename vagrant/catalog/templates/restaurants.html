@@ -7,6 +7,7 @@
 </head>
 
 <body>
+    <a href="{{url_for('disconnect')}}">Click Here to Log Out</a>
     {% with messages = get_flashed_messages() %}
         {% if messages %}
         <ul>
