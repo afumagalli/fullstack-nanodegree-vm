@@ -69,7 +69,6 @@ def registerPlayer(name):
     conn.commit()
     conn.close()
 
-
 def playerStandings():
     """Returns a list of the players and their win records, sorted by wins.
 

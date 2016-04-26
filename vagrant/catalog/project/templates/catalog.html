@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Free and For Sale</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+    <a href="{{url_for('gdisconnect')}}">Click Here to Log Out</a>
+    <h1>Free and For Sale Catalog</h1>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li class="message"><strong>{{ message }}</strong></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    {% endwith %}
+    <br>
+    {% for item in items %}
+    <h1>{{ item.name }} from {{ item.user_relationship.name }}</h1>
+    <a href="{{ url_for('editItem', item_id=item.id) }}">Edit</a>
+    <br>
+    <a href="{{ url_for('deleteItem', item_id=item.id) }}">Delete</a>
+    <br>
+    <a href="mailto:{{ item.user_relationship.email }}?Subject=Your%20{{ item.name }}">Contact seller</a>
+    <br>
+    <br>
+    {% endfor %}
+    <div class="new">
+        <a href="/catalog/new">Create a new item</a>
+    </div>
+</body>
+
+</html>

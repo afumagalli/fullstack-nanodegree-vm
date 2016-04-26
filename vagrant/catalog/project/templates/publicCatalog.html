@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Free and For Sale</title>
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+	<a href="{{url_for('showLogin')}}">Click Here to Log in </a>
+	<h1>Free and For Sale Catalog</h1>
+	{% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li class="message"><strong>{{ message }}</strong></li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    {% endwith %}
+    {% for item in items %}
+    <h1>{{ item.name }}</h1>
+    {% endfor %}
+</body>
+
+</html>
