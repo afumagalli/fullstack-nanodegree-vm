@@ -18,8 +18,21 @@
         </ul>
         {% endif %}
     {% endwith %}
+    <br>
     {% for item in items %}
-    <h1>{{ item.name }}</h1>
+        <h1>{{ item.name }} from {{ item.user_relationship.name }}</h1>
+        {% if item.price %}
+            <div class="price">${{ item.price }}</div>
+        {% else %}
+            <div class="price">Free</div>
+        {% endif %}
+        {% if item.description %}
+            <p class="description">{{ item.description }}</p>
+        {% else %}
+            <p class="description">No description provided.</p>
+        {% endif %}
+        <a href="mailto:{{ item.user_relationship.email }}?Subject=Your%20{{ item.name }}">Contact seller</a>
+        <br> <br>
     {% endfor %}
 </body>
 

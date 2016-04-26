@@ -25,6 +25,7 @@ session = DBSession()
 
 
 def getUserID(email):
+    '''Gets the user ID associated to the user's email'''
     try:
         user = session.query(User).filter_by(email=email).one()
         return user.id
@@ -33,11 +34,13 @@ def getUserID(email):
 
 
 def getUserInfo(user_id):
+    '''Gets all info about a user from their ID'''
     user = session.query(User).filter_by(id=user_id).one()
     return user
 
 
 def createUser(login_session):
+    '''If a user has not visited the site before, creates them in the database'''
     newUser = User(name=login_session['username'], email=login_session[
                    'email'], picture=login_session['picture'])
     session.add(newUser)
@@ -48,6 +51,7 @@ def createUser(login_session):
 
 @app.route('/login')
 def showLogin():
+    '''Displays the login page'''
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in xrange(32))
     login_session['state'] = state
@@ -56,6 +60,7 @@ def showLogin():
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
+    '''Connects to the user's Google account'''
     # Validate state token
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter'), 401)
@@ -140,9 +145,9 @@ def gconnect():
     return output
 
 
-# DISCONNECT - Revoke a current user's token and reset their login_session.
 @app.route('/gdisconnect')
 def gdisconnect():
+    '''Disconnects from the user's Google account'''
     # Only disconnect a connected user.
     access_token = login_session.get('access_token')
     if access_token is None:
@@ -172,6 +177,7 @@ def gdisconnect():
 @app.route('/')
 @app.route('/catalog')
 def showCatalog():
+    '''Shows the item catalog'''
     items = session.query(Item).all()
     if 'username' not in login_session:
         return render_template('publicCatalog.html', items=items)
@@ -180,11 +186,14 @@ def showCatalog():
 
 @app.route('/catalog/new', methods=['GET', 'POST'])
 def newItem():
+    '''Creates a new item in the database'''
     if 'username' not in login_session:
         return redirect('/login')
     if request.method == 'POST':
-        newItem = Item(name=request.form[
-            'name'], user_id=login_session['user_id'])
+        newItem = Item(name=request.form['name'],
+            description=request.form['description'],
+            price=request.form['price'],
+            user_id=login_session['user_id'])
         session.add(newItem)
         session.commit()
         flash("New item created!")
@@ -194,15 +203,21 @@ def newItem():
 
 @app.route('/catalog/<int:item_id>/edit', methods=['GET', 'POST'])
 def editItem(item_id):
+    '''Edits an item in the database'''
     if 'username' not in login_session:
         return redirect('/login')
     itemToEdit = session.query(
         Item).filter_by(id=item_id).one()
     if itemToEdit.user_id != login_session['user_id']:
-        return "<script>function myFunction() {alert('You are not authorized to edit this item. Please create your own item in order to edit.');}</script><body onload='myFunction()''>"
+        flash("You are not authorized to edit this item. Please create your own item in order to edit.")
+        return redirect(url_for('showCatalog'))
     if request.method == 'POST':
         if request.form['name']:
             itemToEdit.name = request.form['name']
+        if request.form['description']:
+            itemToEdit.description = request.form['description']
+        if request.form['price']:
+            itemToEdit.price = request.form['price']
         session.add(itemToEdit)
         session.commit()
         flash("Item updated!")
@@ -213,18 +228,27 @@ def editItem(item_id):
 
 @app.route('/catalog/<int:item_id>/delete', methods=['GET', 'POST'])
 def deleteItem(item_id):
+    '''Deletes an item in a database'''
     if 'username' not in login_session:
         return redirect('/login')
     itemToDelete = session.query(
         Item).filter_by(id=item_id).one()
     if itemToDelete.user_id != login_session['user_id']:
-        return "<script>function myFunction() {alert('You are not authorized to delete this item. Please create your own item in order to delete.');}</script><body onload='myFunction()''>"
+        flash("You are not authorized to delete this item. Please create your own item in order to delete.")
+        return redirect(url_for('showCatalog'))
     if request.method == 'POST':
         session.delete(itemToDelete)
         session.commit()
         flash("Item deleted!")
         return redirect(url_for('showCatalog'))
     return render_template('deleteItem.html', item=itemToDelete)
+
+
+@app.route('/catalog/JSON')
+def catalogJSON():
+    '''Creates a JSON object of all items in the database'''
+    items = session.query(Item).all()
+    return jsonify(Items=[i.serialize for i in items])
 
 
 if __name__ == '__main__':
